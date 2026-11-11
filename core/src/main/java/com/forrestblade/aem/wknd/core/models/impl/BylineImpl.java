@@ -6,6 +6,7 @@ import java.util.List;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.models.annotations.DefaultInjectionStrategy;
 import org.apache.sling.models.annotations.Model;
+import org.apache.sling.models.annotations.injectorspecific.ValueMapValue;
 
 import com.forrestblade.aem.wknd.core.models.Byline;
 
@@ -19,9 +20,12 @@ public class BylineImpl implements Byline {
 
     protected static final String RESOURCE_TYPE = "wknd/components/byline";
 
+    @ValueMapValue
+    private String name;
+
     @Override
     public String getName() {
-        return null;
+        return name;
     }
 
     @Override
