@@ -11,6 +11,7 @@ import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.models.annotations.DefaultInjectionStrategy;
 import org.apache.sling.models.annotations.Exporter;
 import org.apache.sling.models.annotations.Model;
+import org.apache.sling.models.annotations.injectorspecific.InjectionStrategy;
 import org.apache.sling.models.annotations.injectorspecific.OSGiService;
 import org.apache.sling.models.annotations.injectorspecific.Self;
 import org.apache.sling.models.annotations.injectorspecific.ValueMapValue;
@@ -20,6 +21,7 @@ import com.adobe.cq.export.json.ComponentExporter;
 import com.adobe.cq.export.json.ExporterConstants;
 import com.adobe.cq.wcm.core.components.models.Image;
 import com.forrestblade.aem.wknd.core.models.Byline;
+import com.forrestblade.aem.wknd.core.services.BylineSettings;
 
 @Model(
         adaptables = {SlingHttpServletRequest.class},
@@ -37,6 +39,10 @@ public class BylineImpl implements Byline {
 
     @OSGiService
     private ModelFactory modelFactory;
+
+    /** Optional so the model still works if the settings service is not yet active. */
+    @OSGiService(injectionStrategy = InjectionStrategy.OPTIONAL)
+    private BylineSettings settings;
 
     @ValueMapValue
     private String name;
@@ -66,9 +72,15 @@ public class BylineImpl implements Byline {
         if (occupations == null) {
             return Collections.emptyList();
         }
-        List<String> sorted = new ArrayList<>(occupations);
-        Collections.sort(sorted);
-        return sorted;
+        List<String> result = new ArrayList<>(occupations);
+        if (settings == null || settings.isSortOccupations()) {
+            Collections.sort(result);
+        }
+        final int max = settings == null ? 0 : settings.getMaxOccupations();
+        if (max > 0 && result.size() > max) {
+            return new ArrayList<>(result.subList(0, max));
+        }
+        return result;
     }
 
     @Override

@@ -21,6 +21,7 @@ import org.osgi.framework.Constants;
 
 import com.adobe.cq.wcm.core.components.models.Image;
 import com.forrestblade.aem.wknd.core.models.Byline;
+import com.forrestblade.aem.wknd.core.services.impl.BylineSettingsImpl;
 import com.forrestblade.aem.wknd.core.testcontext.AppAemContext;
 
 import io.wcm.testing.mock.aem.junit5.AemContext;
@@ -70,6 +71,24 @@ class BylineImplTest {
         Byline byline = ctx.request().adaptTo(Byline.class);
 
         assertEquals(expected, byline.getOccupations());
+    }
+
+    @Test
+    void testGetOccupations_LimitedBySettings() {
+        ctx.registerInjectActivateService(new BylineSettingsImpl(), "maxOccupations", 2);
+        ctx.currentResource("/content/byline");
+        Byline byline = ctx.request().adaptTo(Byline.class);
+
+        assertEquals(List.of("Blogger", "Photographer"), byline.getOccupations());
+    }
+
+    @Test
+    void testGetOccupations_UnsortedBySettings() {
+        ctx.registerInjectActivateService(new BylineSettingsImpl(), "sortOccupations", false);
+        ctx.currentResource("/content/byline");
+        Byline byline = ctx.request().adaptTo(Byline.class);
+
+        assertEquals(List.of("Photographer", "Blogger", "YouTuber"), byline.getOccupations());
     }
 
     @Test
