@@ -25,7 +25,8 @@ public interface Byline extends ComponentExporter {
     String getName();
 
     /**
-     * Occupations are sorted alphabetically in ascending order.
+     * Occupations are sorted alphabetically by default. The site-wide
+     * BylineSettings service can preserve authored order or limit the list.
      *
      * @return a list of occupations.
      */
