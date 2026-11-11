@@ -1,6 +1,7 @@
 package com.forrestblade.aem.wknd.core.servlets;
 
 import java.io.IOException;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 
 import javax.servlet.Servlet;
@@ -49,24 +50,35 @@ public class BylineVCardServlet extends SlingSafeMethodsServlet {
         }
 
         final String name = byline.getName().trim();
-        final String fileName = name.replaceAll("[^A-Za-z0-9_-]+", "-").replaceAll("^-+|-+$", "") + ".vcf";
+        final String stem = name.replaceAll("[^A-Za-z0-9_-]+", "-").replaceAll("^-+|-+$", "");
+        final String fileName = (stem.isEmpty() ? "byline" : stem) + ".vcf";
 
         response.setContentType("text/vcard");
         response.setCharacterEncoding(StandardCharsets.UTF_8.name());
         response.setHeader("Content-Disposition", "attachment; filename=\"" + fileName + "\"");
-        response.getWriter().write(toVCard(byline));
+        response.getWriter().write(toVCard(byline, request.getRequestURL().toString()));
     }
 
-    static String toVCard(final Byline byline) {
+    static String toVCard(final Byline byline, final String requestUrl) {
         final StringBuilder vcf = new StringBuilder();
         vcf.append("BEGIN:VCARD\r\n");
         vcf.append("VERSION:3.0\r\n");
         vcf.append("FN:").append(escape(byline.getName().trim())).append("\r\n");
+        // N is required in vCard 3.0. Only a display name is authored, so leave
+        // the structured name parts empty rather than guessing how to split it.
+        vcf.append("N:;;;;\r\n");
         if (!byline.getOccupations().isEmpty()) {
             vcf.append("TITLE:").append(escape(String.join(", ", byline.getOccupations()))).append("\r\n");
         }
         if (StringUtils.isNotBlank(byline.getImageSrc())) {
-            vcf.append("PHOTO;VALUE=URI:").append(byline.getImageSrc()).append("\r\n");
+            try {
+                URI image = URI.create(requestUrl).resolve(byline.getImageSrc());
+                if ("https".equalsIgnoreCase(image.getScheme()) || "http".equalsIgnoreCase(image.getScheme())) {
+                    vcf.append("PHOTO;VALUE=URI:").append(image.toASCIIString()).append("\r\n");
+                }
+            } catch (IllegalArgumentException e) {
+                // An invalid optional image URI must not break the contact download.
+            }
         }
         vcf.append("END:VCARD\r\n");
         return vcf.toString();
@@ -79,6 +91,7 @@ public class BylineVCardServlet extends SlingSafeMethodsServlet {
                 .replace(",", "\\,")
                 .replace(";", "\\;")
                 .replace("\r\n", "\\n")
+                .replace("\r", "\\n")
                 .replace("\n", "\\n");
     }
 }

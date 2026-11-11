@@ -38,6 +38,9 @@ class BylineVCardServletTest {
         ctx.currentPage(page);
         ctx.requestPathInfo().setSelectorString("vcard");
         ctx.requestPathInfo().setExtension("vcf");
+        ctx.request().setScheme("https");
+        ctx.request().setServerName("www.example.com");
+        ctx.request().setServerPort(443);
     }
 
     @Test
@@ -58,8 +61,9 @@ class BylineVCardServletTest {
                 "BEGIN:VCARD\r\n"
                         + "VERSION:3.0\r\n"
                         + "FN:Stacey Roswells\\, Jr.\r\n"
+                        + "N:;;;;\r\n"
                         + "TITLE:Blogger\\, Photographer\r\n"
-                        + "PHOTO;VALUE=URI:/content/wknd/us/en/magazine/article/_jcr_content/byline.coreimg.jpeg\r\n"
+                        + "PHOTO;VALUE=URI:https://www.example.com/content/wknd/us/en/magazine/article/_jcr_content/byline.coreimg.jpeg\r\n"
                         + "END:VCARD\r\n",
                 ctx.response().getOutputAsString());
     }
@@ -77,5 +81,21 @@ class BylineVCardServletTest {
     @Test
     void escapesVCardSpecialCharacters() {
         assertEquals("a\\\\b\\,c\\;d\\ne", BylineVCardServlet.escape("a\\b,c;d\ne"));
+        assertEquals("a\\nb\\nc", BylineVCardServlet.escape("a\r\nb\rc"));
+    }
+
+    @Test
+    void usesAFallbackFilenameForNonAsciiNames() throws Exception {
+        Resource byline = ctx.create().resource(page, "byline",
+                "sling:resourceType", BYLINE_RT,
+                "name", "李明",
+                "occupations", new String[] { "Photographer" },
+                "fileReference", HEADSHOT);
+        ctx.currentResource(byline);
+
+        servlet.doGet(ctx.request(), ctx.response());
+
+        assertEquals(HttpServletResponse.SC_OK, ctx.response().getStatus());
+        assertEquals("attachment; filename=\"byline.vcf\"", ctx.response().getHeader("Content-Disposition"));
     }
 }
