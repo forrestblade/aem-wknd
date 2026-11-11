@@ -1,124 +1,54 @@
-# Sample AEM project template
+# aem-wknd
 
-This is a project template for AEM-based applications. It is intended as a best-practice set of examples as well as a potential starting point to develop your own functionality.
+An AEM as a Cloud Service project with a custom **Byline** component, built by working through Adobe's [WKND custom component](https://experienceleague.adobe.com/en/docs/experience-manager-learn/getting-started-wknd-tutorial-develop/project-archetype/custom-component) and [unit testing](https://experienceleague.adobe.com/en/docs/experience-manager-learn/getting-started-wknd-tutorial-develop/project-archetype/unit-testing) chapters on top of a fresh AEM Project Archetype 56 project.
 
-## Modules
+The git history is the point. Each commit is one step of the tutorial, so you can read the component being built from the first `.content.xml` through the last unit test.
 
-The main parts of the template are:
+## What the Byline component does
 
-* [core:](core/README.md) Java bundle containing all core functionality like OSGi services, listeners or schedulers, as well as component-related Java code such as servlets or request filters.
-* [it.tests:](it.tests/README.md) Java based integration tests
-* [ui.apps:](ui.apps/README.md) contains the /apps (and /etc) parts of the project, ie JS&CSS clientlibs, components, and templates
-* [ui.content:](ui.content/README.md) contains sample content using the components from the ui.apps
-* ui.config: contains runmode specific OSGi configs for the project
-* [ui.frontend:](ui.frontend.general/README.md) an optional dedicated front-end build mechanism (Angular, React or general Webpack project)
-* [ui.tests:](ui.tests/README.md) Cypress based UI tests (for other frameworks check [aem-test-samples](https://github.com/adobe/aem-test-samples) repository
-* all: a single content package that embeds all of the compiled modules (bundles and content packages) including any vendor dependencies
-* analyse: this module runs analysis on the project which provides additional validation for deploying into AEMaaCS
+It shows an article contributor with a round headshot, their name, and a comma separated list of what they do. Authors fill in a dialog with an image, a name, and any number of occupations. The component sorts the occupations alphabetically and refuses to render until all three fields are present. In the page editor it shows the standard Core Components placeholder instead.
 
-## How to build
+## How it is put together
 
-To build all the modules run in the project root directory the following command with Maven 3:
+| Piece | Where | What it does |
+|---|---|---|
+| Component definition | `ui.apps/.../components/byline/.content.xml` | Registers `wknd/components/byline` and sets `sling:resourceSuperType` to Core Components Image v3, so image authoring and rendering are inherited. |
+| Authoring dialog | `.../byline/_cq_dialog/.content.xml` | Keeps the inherited Asset tab, hides Metadata, adds a Properties tab with a required Name textfield and an Occupations multifield. Uses the Sling Resource Merger. |
+| Policy dialog | `.../byline/_cq_design_dialog/.content.xml` | Hides the inherited image policy options that make no sense for a headshot. |
+| HTL | `.../byline/byline.html` | Adapts the request to the `Byline` model, renders name and joined occupations, includes the image by forcing the Core Components Image resource type on the current resource, and falls back to the placeholder when the model is empty. |
+| Model interface | `core/.../models/Byline.java` | Public contract: `getName`, `getOccupations`, `isEmpty`. Package version bumped 1.0 to 1.1.0 for bnd baselining. |
+| Sling Model | `core/.../models/impl/BylineImpl.java` | `@ValueMapValue` for name and occupations, `@Self` request plus `@OSGiService ModelFactory` to adapt the resource to the Core Components `Image` model in `@PostConstruct`, and the `isEmpty` rule. |
+| Styles | `ui.frontend/src/main/webpack/components/_byline.scss` | 60px circular image floated left, serif name, small uppercase gray occupations. BEM class names. |
+| Tests | `core/src/test/.../impl/BylineImplTest.java` | Eight JUnit 5 tests on an AEM Mocks `AemContext`, with a Mockito `ModelFactory` standing in for the Core Components Image. Mock content lives in `BylineImplTest.json`. |
+
+## Where this departs from the tutorial
+
+The tutorial was written against Core Components Image **v2**. Archetype 56 proxies v3, so the Byline extends v3 too. The authoring dialog carries over unchanged. The policy dialog only hides the fields that exist in v3 (`decorative`, `altValueFromDAM`, `titleValueFromDAM`, `displayCaptionPopup`); v2's `features` tab and `disableUuidTracking` are gone.
+
+The archetype's `_variables.scss` does not have the WKND type scale, so the serif stack, `xsmall` and `medium` sizes, and `$gray` were added before the Byline styles.
+
+The archetype ships `junit-addons 1.4` as a test dependency. Nothing uses it, and it pulls in Xerces 2.6.2, which shadows the JDK's SAX parser and makes `ctx.load().json()` fail with `Unable to enable secure processing`. It was removed.
+
+The Java package is `com.forrestblade.aem.wknd` rather than Adobe's `com.adobe.aem.guides.wknd`.
+
+## What was not done
+
+I did not have access to an AEM SDK Quickstart, so the component was never deployed to a running author instance or authored in the page editor. Everything here is verified by the Maven build (compilation, bnd baselining, SCSS compile, content package validation, the AEMaaCS analyser) and by the unit tests. The tutorial page has screenshots of the component authored and rendered.
+
+## Build and test
+
+Needs Java 11 or 17 and Maven 3.9.
 
     mvn clean install
 
-To build all the modules and deploy the `all` package to a local instance of AEM, run in the project root directory the following command:
+runs every module, including the tests. To run just the Byline tests
+
+    mvn -pl core test -Dtest=BylineImplTest
+
+With a local AEM author on port 4502
 
     mvn clean install -PautoInstallSinglePackage
 
-Or to deploy it to a publish instance, run
+## Modules
 
-    mvn clean install -PautoInstallSinglePackagePublish
-
-Or alternatively
-
-    mvn clean install -PautoInstallSinglePackage -Daem.port=4503
-
-Or to deploy only the bundle to the author, run
-
-    mvn clean install -PautoInstallBundle
-
-Or to deploy only a single content package, run in the sub-module directory (i.e `ui.apps`)
-
-    mvn clean install -PautoInstallPackage
-
-## Documentation
-
-The build process also generates documentation in the form of README.md files in each module directory for easy reference. Depending on the options you select at build time, the content may be customized to your project.
-
-## Testing
-
-There are three levels of testing contained in the project:
-
-### Unit tests
-
-This show-cases classic unit testing of the code contained in the bundle. To
-test, execute:
-
-    mvn clean test
-
-### Integration tests
-
-This allows running integration tests that exercise the capabilities of AEM via
-HTTP calls to its API. To run the integration tests, run:
-
-    mvn clean verify -Plocal
-
-Test classes must be saved in the `src/main/java` directory (or any of its
-subdirectories), and must be contained in files matching the pattern `*IT.java`.
-
-The configuration provides sensible defaults for a typical local installation of
-AEM. If you want to point the integration tests to different AEM author and
-publish instances, you can use the following system properties via Maven's `-D`
-flag.
-
-| Property              | Description                                         | Default value           |
-|-----------------------|-----------------------------------------------------|-------------------------|
-| `it.author.url`       | URL of the author instance                          | `http://localhost:4502` |
-| `it.author.user`      | Admin user for the author instance                  | `admin`                 |
-| `it.author.password`  | Password of the admin user for the author instance  | `admin`                 |
-| `it.publish.url`      | URL of the publish instance                         | `http://localhost:4503` |
-| `it.publish.user`     | Admin user for the publish instance                 | `admin`                 |
-| `it.publish.password` | Password of the admin user for the publish instance | `admin`                 |
-
-The integration tests in this archetype use the [AEM Testing
-Clients](https://github.com/adobe/aem-testing-clients) and showcase some
-recommended [best
-practices](https://github.com/adobe/aem-testing-clients/wiki/Best-practices) to
-be put in use when writing integration tests for AEM.
-
-## Static Analysis
-
-The `analyse` module performs static analysis on the project for deploying into AEMaaCS. It is automatically
-run when executing
-
-    mvn clean install
-
-from the project root directory. Additional information about this analysis and how to further configure it
-can be found here https://github.com/adobe/aemanalyser-maven-plugin
-
-### UI tests
-
-They will test the UI layer of your AEM application using Cypress framework.
-
-Check README file in `ui.tests` module for more details.
-
-Examples of UI tests in different frameworks can be found here: https://github.com/adobe/aem-test-samples
-
-## ClientLibs
-
-The frontend module is made available using an [AEM ClientLib](https://helpx.adobe.com/experience-manager/6-5/sites/developing/using/clientlibs.html). When executing the NPM build script, the app is built and the [`aem-clientlib-generator`](https://github.com/wcm-io-frontend/aem-clientlib-generator) package takes the resulting build output and transforms it into such a ClientLib.
-
-A ClientLib will consist of the following files and directories:
-
-- `css/`: CSS files which can be requested in the HTML
-- `css.txt` (tells AEM the order and names of files in `css/` so they can be merged)
-- `js/`: JavaScript files which can be requested in the HTML
-- `js.txt` (tells AEM the order and names of files in `js/` so they can be merged
-- `resources/`: Source maps, non-entrypoint code chunks (resulting from code splitting), static assets (e.g. icons), etc.
-
-## Maven settings
-
-The project comes with the auto-public repository configured. To setup the repository in your Maven settings, refer to:
-
-    http://helpx.adobe.com/experience-manager/kb/SetUpTheAdobeMavenRepository.html
+Standard archetype layout. `core` is the OSGi bundle, `ui.apps` holds components and clientlibs, `ui.frontend` is the webpack build that produces the site clientlib, `ui.content` and `ui.config` carry sample content and OSGi config, `all` embeds everything into one deployable package and runs the AEMaaCS analyser, `it.tests` and `ui.tests` are integration and Cypress tests, and `dispatcher` is the dispatcher config.
