@@ -5,6 +5,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
 
+import java.util.List;
+
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.models.factory.ModelFactory;
 import org.junit.jupiter.api.BeforeEach;
@@ -54,5 +56,16 @@ class BylineImplTest {
         Byline byline = ctx.request().adaptTo(Byline.class);
 
         assertEquals(expected, byline.getName());
+    }
+
+    @Test
+    void testGetOccupations() {
+        // Authored out of order in the JSON; the model must sort them.
+        final List<String> expected = List.of("Blogger", "Photographer", "YouTuber");
+
+        ctx.currentResource("/content/byline");
+        Byline byline = ctx.request().adaptTo(Byline.class);
+
+        assertEquals(expected, byline.getOccupations());
     }
 }
