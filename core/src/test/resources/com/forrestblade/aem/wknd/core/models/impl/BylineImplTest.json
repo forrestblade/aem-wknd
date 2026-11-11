@@ -1,0 +1,7 @@
+{
+  "byline": {
+    "jcr:primaryType": "nt:unstructured",
+    "sling:resourceType": "wknd/components/byline",
+    "name": "Jane Doe"
+  }
+}
