@@ -78,4 +78,20 @@ class BylineImplTest {
 
         assertTrue(byline.isEmpty());
     }
+
+    @Test
+    void testIsEmpty_WithoutName() {
+        ctx.currentResource("/content/without-name");
+        Byline byline = ctx.request().adaptTo(Byline.class);
+
+        assertTrue(byline.isEmpty());
+    }
+
+    @Test
+    void testIsEmpty_WithoutOccupations() {
+        ctx.currentResource("/content/without-occupations");
+        Byline byline = ctx.request().adaptTo(Byline.class);
+
+        assertTrue(byline.isEmpty());
+    }
 }
