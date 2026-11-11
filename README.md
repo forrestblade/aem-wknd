@@ -11,7 +11,7 @@ The Byline shows a contributor's headshot, name, and occupations. It extends Cor
 - `core/.../services/BylineSettings.java`, `impl/BylineSettingsImpl.java` OSGi service with metatype (max occupations, sort on/off); default config in `ui.config`
 - `core/.../servlets/BylineVCardServlet.java` resource-type-bound servlet, `byline.vcard.vcf`
 - `ui.frontend/.../components/_byline.scss` styles
-- `core/src/test/` 20 tests: the tutorial's mocked `BylineImplTest`, plus tests that run the real Core Components Image model, the real Jackson exporter, the OSGi service and the servlet, no mocks
+- `core/src/test/` 21 Byline tests using AEM Mocks, including tests with the real Core Components Image and Jackson exporter. The full project runs 26 tests.
 
 Differences from the tutorial: Image v3 instead of v2, own Java package, and the archetype's unused `junit-addons` removed because its Xerces breaks AEM Mocks JSON loading.
 
