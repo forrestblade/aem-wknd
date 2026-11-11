@@ -9,21 +9,25 @@ import javax.annotation.PostConstruct;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.models.annotations.DefaultInjectionStrategy;
+import org.apache.sling.models.annotations.Exporter;
 import org.apache.sling.models.annotations.Model;
 import org.apache.sling.models.annotations.injectorspecific.OSGiService;
 import org.apache.sling.models.annotations.injectorspecific.Self;
 import org.apache.sling.models.annotations.injectorspecific.ValueMapValue;
 import org.apache.sling.models.factory.ModelFactory;
 
+import com.adobe.cq.export.json.ComponentExporter;
+import com.adobe.cq.export.json.ExporterConstants;
 import com.adobe.cq.wcm.core.components.models.Image;
 import com.forrestblade.aem.wknd.core.models.Byline;
 
 @Model(
         adaptables = {SlingHttpServletRequest.class},
-        adapters = {Byline.class},
+        adapters = {Byline.class, ComponentExporter.class},
         resourceType = {BylineImpl.RESOURCE_TYPE},
         defaultInjectionStrategy = DefaultInjectionStrategy.OPTIONAL
 )
+@Exporter(name = ExporterConstants.SLING_MODEL_EXPORTER_NAME, extensions = ExporterConstants.SLING_MODEL_EXTENSION)
 public class BylineImpl implements Byline {
 
     protected static final String RESOURCE_TYPE = "wknd/components/byline";
@@ -65,6 +69,17 @@ public class BylineImpl implements Byline {
         List<String> sorted = new ArrayList<>(occupations);
         Collections.sort(sorted);
         return sorted;
+    }
+
+    @Override
+    public String getImageSrc() {
+        final Image componentImage = getImage();
+        return componentImage == null ? null : componentImage.getSrc();
+    }
+
+    @Override
+    public String getExportedType() {
+        return request.getResource().getResourceType();
     }
 
     @Override
