@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.when;
 
 import java.util.List;
 
@@ -90,6 +91,27 @@ class BylineImplTest {
     @Test
     void testIsEmpty_WithoutOccupations() {
         ctx.currentResource("/content/without-occupations");
+        Byline byline = ctx.request().adaptTo(Byline.class);
+
+        assertTrue(byline.isEmpty());
+    }
+
+    @Test
+    void testIsEmpty_WithoutImage() {
+        ctx.currentResource("/content/byline");
+        // Override the setUp stub: the ModelFactory cannot produce an Image at all.
+        lenient().when(modelFactory.getModelFromWrappedRequest(eq(ctx.request()), any(Resource.class), eq(Image.class)))
+                .thenReturn(null);
+        Byline byline = ctx.request().adaptTo(Byline.class);
+
+        assertTrue(byline.isEmpty());
+    }
+
+    @Test
+    void testIsEmpty_WithoutImageSrc() {
+        ctx.currentResource("/content/byline");
+        // An Image model exists but resolves to no renderable source.
+        when(image.getSrc()).thenReturn("");
         Byline byline = ctx.request().adaptTo(Byline.class);
 
         assertTrue(byline.isEmpty());
