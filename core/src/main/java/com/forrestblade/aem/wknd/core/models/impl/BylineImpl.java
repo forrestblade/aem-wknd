@@ -1,5 +1,6 @@
 package com.forrestblade.aem.wknd.core.models.impl;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -23,6 +24,9 @@ public class BylineImpl implements Byline {
     @ValueMapValue
     private String name;
 
+    @ValueMapValue
+    private List<String> occupations;
+
     @Override
     public String getName() {
         return name;
@@ -30,7 +34,12 @@ public class BylineImpl implements Byline {
 
     @Override
     public List<String> getOccupations() {
-        return Collections.emptyList();
+        if (occupations == null) {
+            return Collections.emptyList();
+        }
+        List<String> sorted = new ArrayList<>(occupations);
+        Collections.sort(sorted);
+        return sorted;
     }
 
     @Override
