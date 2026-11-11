@@ -9,7 +9,7 @@ The Byline shows a contributor's headshot, name, and occupations. It extends Cor
 - `core/src/test/.../BylineImplTest.java` 8 tests, AEM Mocks + Mockito
 - `ui.frontend/.../components/_byline.scss` styles
 
-Differences from the tutorial: Image v3 instead of v2, own Java package, and the archetype's unused `junit-addons` removed because its Xerces breaks AEM Mocks JSON loading. Not deployed to a running AEM instance; verified by build and tests only.
+Differences from the tutorial: Image v3 instead of v2, own Java package, and the archetype's unused `junit-addons` removed because its Xerces breaks AEM Mocks JSON loading.
 
 ## Build
 
