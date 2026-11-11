@@ -6,6 +6,7 @@ import java.util.List;
 
 import javax.annotation.PostConstruct;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.models.annotations.DefaultInjectionStrategy;
 import org.apache.sling.models.annotations.Model;
@@ -68,8 +69,21 @@ public class BylineImpl implements Byline {
 
     @Override
     public boolean isEmpty() {
-        // Nothing is wired up yet, so the component always shows its placeholder.
-        return true;
+        final Image componentImage = getImage();
+
+        if (StringUtils.isBlank(name)) {
+            // Name is missing, but required
+            return true;
+        } else if (occupations == null || occupations.isEmpty()) {
+            // At least one occupation is required
+            return true;
+        } else if (componentImage == null || StringUtils.isBlank(componentImage.getSrc())) {
+            // A valid image is required
+            return true;
+        } else {
+            // Everything is populated, so this component is not considered empty
+            return false;
+        }
     }
 
     /**
