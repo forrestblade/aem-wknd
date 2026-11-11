@@ -16,3 +16,13 @@ $color-link:            #2020E0;
 $color-foreground-dark: invert($color-foreground);
 $color-background-dark: invert($color-background);
 $color-link-dark:       invert($color-link);
+
+//== Typography scale
+
+$font-family-serif:     Georgia, "Times New Roman", Times, serif;
+$font-size-xsmall:      12px;
+$font-size-medium:      24px;
+
+//== Grays
+
+$gray:                  #696969;
