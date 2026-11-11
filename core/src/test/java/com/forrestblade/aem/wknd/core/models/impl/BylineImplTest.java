@@ -1,6 +1,7 @@
 package com.forrestblade.aem.wknd.core.models.impl;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
@@ -67,5 +68,14 @@ class BylineImplTest {
         Byline byline = ctx.request().adaptTo(Byline.class);
 
         assertEquals(expected, byline.getOccupations());
+    }
+
+    @Test
+    void testIsEmpty() {
+        // A freshly dropped component with nothing authored.
+        ctx.currentResource("/content/empty");
+        Byline byline = ctx.request().adaptTo(Byline.class);
+
+        assertTrue(byline.isEmpty());
     }
 }
